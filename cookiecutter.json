@@ -1,0 +1,17 @@
+{
+  "project_name": "iris_classifier",
+  "project_slug": "iris_classifier",
+  "team": "team_a",
+  "owner": "iris_team",
+  "allowed_envs": ["dev", "stage"],
+  "tags": ["iris", "classification", "ml"],
+  "base_dag_name": "iris",
+  "s3_bucket": "team-a-bucket",
+
+  "train_s3_key": "iris/iris_train.csv",
+  "batch_inference_s3_key": "iris/iris_batch_input.csv",
+  "drift_reference_s3_key": "iris/iris_train.csv",
+  "drift_current_s3_key": "iris/iris_batch_input.csv",
+  "drift_output_prefix": "iris/drift_reports",
+  "batch_output_prefix": "iris/predictions"
+}
