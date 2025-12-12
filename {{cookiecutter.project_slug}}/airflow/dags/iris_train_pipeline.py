@@ -27,7 +27,7 @@ PROJECT_SLUG = "{{ cookiecutter.project_slug }}"
 ENV = os.getenv("PLATFORM_ENV", "dev").lower()
 
 S3_BUCKET = os.getenv("TEAM_S3_BUCKET", "{{ cookiecutter.s3_bucket }}")
-S3_KEY = os.getenv("TEAM_S3_TRAIN_KEY", "{{ cookiecutter.train_key }}")
+S3_KEY = os.getenv("TEAM_S3_TRAIN_KEY", "{{ cookiecutter.train_s3_key }}")
 LOCAL_DATA_PATH = "/tmp/iris_train.csv"
 
 ACCURACY_THRESHOLD = float(os.getenv("ACCURACY_THRESHOLD", "0.8"))
