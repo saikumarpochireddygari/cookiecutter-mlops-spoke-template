@@ -175,11 +175,7 @@ def register_iris_model(**context):
     model_name = f"{TEAM}_{ENV}_{PROJECT_SLUG}_model"
     model_version = None
 
-    if approval_state == "approved":
-        client = MlflowClient()
-        registered_model = client.create_registered_model(model_name=model_name)
-    else:
-        # If not approved, we still log the event but do not register
+    if approval_state != "approved":
         audit_log(
             "model_not_registered",
             {
@@ -192,6 +188,14 @@ def register_iris_model(**context):
         return
 
     client = MlflowClient()
+
+    # Create registered model if it doesn't exist
+    try:
+        client.create_registered_model(model_name=model_name)
+    except Exception as e:
+        # Likely already exists; we don't fail the DAG on that
+        print(f"[MLFLOW] registered model '{model_name}' may already exist: {e}")
+
     mv = client.create_model_version(
         name=model_name,
         source=f"runs:/{run_id}/model",
@@ -199,7 +203,7 @@ def register_iris_model(**context):
     )
     model_version = mv.version
 
-    # Example policy: keep multiple Staging, only one Production is enforced elsewhere
+    # Multiple staging OK; prod restriction enforced externally
     client.transition_model_version_stage(
         name=model_name,
         version=model_version,
@@ -234,11 +238,6 @@ with DAG(
     start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=[PROJECT_SLUG, TEAM, ENV],
-    # NOTE: keep access_control commented unless roles exist in Airflow
-    # access_control={
-    #     "team_a_ds": {"can_read", "can_edit"},
-    #     "platform_ops": {"can_read", "can_edit"},
-    # },
 ) as dag:
     ingest_task = PythonOperator(
         task_id="ingest",

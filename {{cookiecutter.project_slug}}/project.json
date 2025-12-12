@@ -4,14 +4,15 @@
   "team": "{{ cookiecutter.team }}",
   "owner": "{{ cookiecutter.owner }}",
 
-  "allowed_envs": {{ cookiecutter.allowed_envs }},
-  "tags": {{ cookiecutter.tags }},
+  "allowed_envs": ["{{ cookiecutter.allowed_envs }}"],
+  "tags": ["{{ cookiecutter.tags }}"],
 
   "dag_path": "airflow/dags",
   "base_dag_name": "{{ cookiecutter.base_dag_name }}",
 
   "s3_bucket": "{{ cookiecutter.s3_bucket }}",
   "train_s3_key": "{{ cookiecutter.train_s3_key }}",
+  "test_s3_key": "{{ cookiecutter.test_s3_key }}",
   "batch_inference_s3_key": "{{ cookiecutter.batch_inference_s3_key }}",
   "drift_reference_s3_key": "{{ cookiecutter.drift_reference_s3_key }}",
   "drift_current_s3_key": "{{ cookiecutter.drift_current_s3_key }}",

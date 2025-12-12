@@ -21,10 +21,14 @@ PROJECT_SLUG = "{{ cookiecutter.project_slug }}"
 ENV = os.getenv("PLATFORM_ENV", "dev").lower()
 
 S3_BUCKET = os.getenv("TEAM_S3_BUCKET", "{{ cookiecutter.s3_bucket }}")
-S3_TRAIN_KEY = os.getenv("TEAM_S3_TRAIN_KEY", "{{ cookiecutter.train_s3_key }}")
-S3_TEST_KEY = os.getenv("TEAM_S3_TEST_KEY", "{{ cookiecutter.test_s3_key }}")
+S3_REFERENCE_KEY = os.getenv(
+    "TEAM_S3_DRIFT_REFERENCE_KEY", "{{ cookiecutter.drift_reference_s3_key }}"
+)
+S3_CURRENT_KEY = os.getenv(
+    "TEAM_S3_DRIFT_CURRENT_KEY", "{{ cookiecutter.drift_current_s3_key }}"
+)
 S3_DRIFT_PREFIX = os.getenv(
-    "TEAM_DRIFT_PREFIX", "{{ cookiecutter.drift_prefix }}"
+    "TEAM_DRIFT_OUTPUT_PREFIX", "{{ cookiecutter.drift_output_prefix }}"
 )
 
 RUN_OWNER = os.getenv("RUN_OWNER", "example_user")
@@ -69,7 +73,6 @@ def population_stability_index(expected: np.ndarray, actual: np.ndarray, bins: i
     quantiles = np.linspace(0, 1, bins + 1)
     bin_edges = np.quantile(expected, quantiles)
 
-    # Make edges strictly increasing to avoid weirdness
     bin_edges = np.unique(bin_edges)
     if len(bin_edges) < 2:
         return 0.0
@@ -114,18 +117,18 @@ def compute_drift(train_df: pd.DataFrame, test_df: pd.DataFrame, feature_cols):
 def run_drift_check(**context):
     s3 = get_s3_client()
 
-    # 1) Download train + test
-    train_path = "/tmp/iris_train.csv"
-    test_path = "/tmp/iris_test.csv"
+    # 1) Download reference + current
+    reference_path = "/tmp/iris_reference.csv"
+    current_path = "/tmp/iris_current.csv"
 
-    print(f"Downloading train s3://{S3_BUCKET}/{S3_TRAIN_KEY}")
-    s3.download_file(S3_BUCKET, S3_TRAIN_KEY, train_path)
+    print(f"Downloading reference s3://{S3_BUCKET}/{S3_REFERENCE_KEY}")
+    s3.download_file(S3_BUCKET, S3_REFERENCE_KEY, reference_path)
 
-    print(f"Downloading test s3://{S3_BUCKET}/{S3_TEST_KEY}")
-    s3.download_file(S3_BUCKET, S3_TEST_KEY, test_path)
+    print(f"Downloading current s3://{S3_BUCKET}/{S3_CURRENT_KEY}")
+    s3.download_file(S3_BUCKET, S3_CURRENT_KEY, current_path)
 
-    train_df = pd.read_csv(train_path)
-    test_df = pd.read_csv(test_path)
+    train_df = pd.read_csv(reference_path)
+    test_df = pd.read_csv(current_path)
 
     feature_cols = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
 
@@ -138,7 +141,6 @@ def run_drift_check(**context):
     with mlflow.start_run(
         run_name=f"{TEAM}_{ENV}_{PROJECT_SLUG}_drift_check"
     ) as run:
-        # Some summary metrics
         mlflow.log_metric("max_psi", float(drift_df["psi"].max()))
         mlflow.log_metric("avg_psi", float(drift_df["psi"].mean()))
 

@@ -21,9 +21,11 @@ PROJECT_SLUG = "{{ cookiecutter.project_slug }}"
 ENV = os.getenv("PLATFORM_ENV", "dev").lower()
 
 S3_BUCKET = os.getenv("TEAM_S3_BUCKET", "{{ cookiecutter.s3_bucket }}")
-S3_TEST_KEY = os.getenv("TEAM_S3_TEST_KEY", "{{ cookiecutter.test_s3_key }}")
-S3_PREDICTIONS_PREFIX = os.getenv(
-    "TEAM_PREDICTIONS_PREFIX", "{{ cookiecutter.predictions_prefix }}"
+S3_BATCH_INPUT_KEY = os.getenv(
+    "TEAM_S3_BATCH_INFERENCE_KEY", "{{ cookiecutter.batch_inference_s3_key }}"
+)
+S3_BATCH_OUTPUT_PREFIX = os.getenv(
+    "TEAM_BATCH_OUTPUT_PREFIX", "{{ cookiecutter.batch_output_prefix }}"
 )
 
 RUN_OWNER = os.getenv("RUN_OWNER", "example_user")
@@ -56,11 +58,11 @@ def audit_log(event_type: str, payload: dict):
 def run_batch_inference(**context):
     s3 = get_s3_client()
 
-    # 1) Download test data
-    local_test_path = "/tmp/iris_test.csv"
-    print(f"Downloading test data s3://{S3_BUCKET}/{S3_TEST_KEY}")
-    s3.download_file(S3_BUCKET, S3_TEST_KEY, local_test_path)
-    df = pd.read_csv(local_test_path)
+    # 1) Download batch input data
+    local_batch_path = "/tmp/iris_batch_input.csv"
+    print(f"Downloading batch input s3://{S3_BUCKET}/{S3_BATCH_INPUT_KEY}")
+    s3.download_file(S3_BUCKET, S3_BATCH_INPUT_KEY, local_batch_path)
+    df = pd.read_csv(local_batch_path)
 
     # 2) Load latest STAGING model
     model_name = f"{TEAM}_{ENV}_{PROJECT_SLUG}_model"
@@ -71,7 +73,7 @@ def run_batch_inference(**context):
         raise RuntimeError(f"No STAGING model found for {model_name}")
 
     model_version = latest[0].version
-    run_id = latest[0].run_id
+    source_run_id = latest[0].run_id
     model_uri = f"models:/{model_name}/Staging"
 
     model = mlflow.sklearn.load_model(model_uri)
@@ -93,7 +95,7 @@ def run_batch_inference(**context):
         mlflow.log_param("env", ENV)
         mlflow.log_param("model_name", model_name)
         mlflow.log_param("model_version", model_version)
-        mlflow.log_param("source_run_id", run_id)
+        mlflow.log_param("source_run_id", source_run_id)
 
         # Log predictions as artifact
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -103,7 +105,7 @@ def run_batch_inference(**context):
 
         # 4) Also push predictions back to MinIO
         ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-        s3_key_out = f"{S3_PREDICTIONS_PREFIX.rstrip('/')}/preds_{ts}.csv"
+        s3_key_out = f"{S3_BATCH_OUTPUT_PREFIX.rstrip('/')}/preds_{ts}.csv"
         print(f"Uploading predictions to s3://{S3_BUCKET}/{s3_key_out}")
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp:
             result_df.to_csv(tmp.name, index=False)
