@@ -14,5 +14,5 @@
   "drift_reference_s3_key": "iris/iris_train.csv",
   "drift_current_s3_key": "iris/iris_batch_input.csv",
   "drift_output_prefix": "iris/drift_reports",
-  "batch_output_prefix": "iris/predictions"
+  "predictions_prefix": "iris/predictions"
 }
