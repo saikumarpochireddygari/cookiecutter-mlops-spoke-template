@@ -15,7 +15,7 @@ Defaults (can be overridden via environment variables in Airflow):
 
 - S3 bucket: `{{ cookiecutter.s3_bucket }}`
 - Train key: `{{ cookiecutter.train_s3_key }}`
-- Test key: `{{ cookiecutter.test_key }}`
+- Test key: `{{ cookiecutter.test_s3_key }}`
 - Predictions prefix: `{{ cookiecutter.predictions_prefix }}`
 - Drift prefix: `{{ cookiecutter.drift_prefix }}`
 
