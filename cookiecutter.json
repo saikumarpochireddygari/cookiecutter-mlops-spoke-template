@@ -9,6 +9,7 @@
   "s3_bucket": "team-a-bucket",
 
   "train_s3_key": "iris/iris_train.csv",
+  "test_s3_key": "iris/iris_test.csv",
   "batch_inference_s3_key": "iris/iris_batch_input.csv",
   "drift_reference_s3_key": "iris/iris_train.csv",
   "drift_current_s3_key": "iris/iris_batch_input.csv",
