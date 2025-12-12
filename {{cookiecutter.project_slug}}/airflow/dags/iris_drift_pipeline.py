@@ -21,7 +21,7 @@ PROJECT_SLUG = "{{ cookiecutter.project_slug }}"
 ENV = os.getenv("PLATFORM_ENV", "dev").lower()
 
 S3_BUCKET = os.getenv("TEAM_S3_BUCKET", "{{ cookiecutter.s3_bucket }}")
-S3_TRAIN_KEY = os.getenv("TEAM_S3_TRAIN_KEY", "{{ cookiecutter.train_key }}")
+S3_TRAIN_KEY = os.getenv("TEAM_S3_TRAIN_KEY", "{{ cookiecutter.train_s3_key }}")
 S3_TEST_KEY = os.getenv("TEAM_S3_TEST_KEY", "{{ cookiecutter.test_key }}")
 S3_DRIFT_PREFIX = os.getenv(
     "TEAM_DRIFT_PREFIX", "{{ cookiecutter.drift_prefix }}"
